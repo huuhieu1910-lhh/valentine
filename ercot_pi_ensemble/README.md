@@ -91,14 +91,15 @@ thống kê của tập train.
 6. **L_ramp.** Độ dốc ŷ_{t+1} − y_t (và giữa các bước liên tiếp khi horizon > 1) không được vượt giới hạn
    ramp của giờ trong ngày đó. Giới hạn là quantile 99.9 % của |ΔP| theo từng giờ trên tập train, nới
    thêm 10 %. Loss: mean(ReLU(|Δŷ| − R_max(hour))²).
-7. **Huấn luyện và Feedback.** Bước 1: mỗi nhánh tối ưu L_θ riêng (AdamW, gradient clipping,
-   early stopping theo L_θ trên Val 2023). Bước 2 (mũi tên Feedback): đóng băng hai nhánh, học
+7. **Huấn luyện và Feedback.** Bước 1: mỗi nhánh tối ưu L_θ riêng (AdamW lr 1e-3, gradient clipping,
+   giảm lr một nửa sau 3 epoch không cải thiện, early stopping sau 8 epoch theo L_θ trên Val 2023). Bước 2 (mũi tên Feedback): đóng băng hai nhánh, học
    w = softmax(α) bằng cách tối ưu L_θ của ŷ ensemble trên Val, nên w_i ≥ 0 và Σw_i = 1. Đây chính
    là w' trong công thức SHAP.
 8. **SHAP.** `shap.DeepExplainer` chạy riêng cho từng nhánh với cùng background (mẫu từ tập train);
    vì ensemble tuyến tính nên φ^ens = w'_CNN·φ^CNN + w'_T·φ^T. Với nhánh CNN kết quả chính xác
    (tổng φ bằng f(x) − E[f]). Với nhánh Transformer, LayerNorm, softmax và các phép nhân trong attention
-   không có luật DeepLIFT trong SHAP nên dùng gradient thay thế; kết quả là xấp xỉ. Độ lệch
+   không có luật DeepLIFT trong SHAP nên dùng gradient thay thế; kết quả là xấp xỉ (trên dữ liệu tổng
+   hợp, phần không giải thích được có trung vị khoảng 9 % của |f(x) − E[f]|). Độ lệch
    max|f(x) − E[f] − Σφ| của từng mô hình được ghi vào `summary.json` (`shap_completeness_gap_mw`).
 9. **Regime-Flag.** `regime` = heating / neutral / cooling tùy nhiệt độ giờ mục tiêu nằm dưới, trong
    hay trên T0 ± 2 °C. `flags` = `ENVELOPE` (dự báo ra ngoài bao parabol), `RAMP` (ramp vượt giới hạn),

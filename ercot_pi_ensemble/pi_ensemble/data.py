@@ -30,10 +30,10 @@ def add_calendar_features(df: pd.DataFrame) -> pd.DataFrame:
     df = df.copy()
     ts = df[TIMESTAMP]
     df["hour"] = ts.dt.hour
-    df["weekday"] = ts.dt.dayofweek + 1
+    df["weekday"] = ts.dt.day_of_week + 1
     df["month"] = ts.dt.month
-    df["day_of_year"] = ts.dt.dayofyear
-    df["is_weekend"] = (ts.dt.dayofweek >= 5).astype(np.float32)
+    df["day_of_year"] = ts.dt.day_of_year
+    df["is_weekend"] = (ts.dt.day_of_week >= 5).astype(np.float32)
     days = ts.dt.normalize()
     holidays = USFederalHolidayCalendar().holidays(start=days.min(), end=days.max())
     df["is_holiday"] = days.isin(holidays).astype(np.float32)
@@ -43,7 +43,7 @@ def add_calendar_features(df: pd.DataFrame) -> pd.DataFrame:
 def year_fraction(ts: pd.Series) -> np.ndarray:
     """Calendar year plus the elapsed fraction of that year, e.g. 2021.5 in early July 2021."""
     days_in_year = np.where(ts.dt.is_leap_year, 366.0, 365.0)
-    return (ts.dt.year + (ts.dt.dayofyear - 1 + ts.dt.hour / 24.0) / days_in_year).to_numpy(np.float64)
+    return (ts.dt.year + (ts.dt.day_of_year - 1 + ts.dt.hour / 24.0) / days_in_year).to_numpy(np.float64)
 
 
 def load_csv(path: str | Path) -> pd.DataFrame:

@@ -43,9 +43,9 @@ def test_envelope_calibration(train_frame):
     assert (lower < upper).all()
     assert abs(temp[upper.argmin()].item() - 18.5) <= 0.5  # vertex at T0
 
-    t = torch.as_tensor(train_frame["temp_c"].to_numpy(), dtype=torch.float32)
-    p = torch.as_tensor(train_frame["load_mw"].to_numpy(), dtype=torch.float32)
-    yr = torch.as_tensor(year_fraction(train_frame[TIMESTAMP]), dtype=torch.float32)
+    t = torch.tensor(train_frame["temp_c"].to_numpy(), dtype=torch.float32)
+    p = torch.tensor(train_frame["load_mw"].to_numpy(), dtype=torch.float32)
+    yr = torch.tensor(year_fraction(train_frame[TIMESTAMP]), dtype=torch.float32)
     lower, upper = calib.envelope(t, yr)
     inside = ((p >= lower) & (p <= upper)).float().mean().item()
     assert inside > 0.99                                    # training load lies inside the envelope

@@ -76,7 +76,8 @@ class TrainConfig:
     batch_size: int = 256
     lr: float = 1e-3
     weight_decay: float = 1e-5
-    patience: int = 8
+    patience: int = 8                # early stopping
+    lr_patience: int = 3             # epochs without improvement before halving the learning rate
     grad_clip: float = 1.0
     ensemble_steps: int = 300
     ensemble_lr: float = 0.05

@@ -52,6 +52,7 @@ def train_branch(branch: nn.Module, loss_fn: PhysicsInformedLoss, train: WindowS
                  cfg: TrainConfig, name: str = "branch", log: Callable[[str], None] = print) -> list[dict]:
     """Minimise L_theta for one branch with AdamW; keep the epoch with the best validation L_theta."""
     opt = torch.optim.AdamW(branch.parameters(), lr=cfg.lr, weight_decay=cfg.weight_decay)
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(opt, factor=0.5, patience=cfg.lr_patience)
     generator = torch.Generator().manual_seed(cfg.seed)
     best, best_state, stale, history = math.inf, copy.deepcopy(branch.state_dict()), 0, []
     for epoch in range(1, cfg.epochs + 1):
@@ -65,6 +66,7 @@ def train_branch(branch: nn.Module, loss_fn: PhysicsInformedLoss, train: WindowS
             opt.step()
             running += loss.item() * len(b["x"])
         val_parts = evaluate_loss(branch, loss_fn, val)
+        scheduler.step(val_parts["total"])
         history.append({"epoch": epoch, "train_loss": running / len(train),
                         **{f"val_{k}": v for k, v in val_parts.items()}})
         log(f"[{name}] epoch {epoch:3d}  train L {running / len(train):.4f}  val L {val_parts['total']:.4f}"

@@ -86,6 +86,8 @@ class MultiHeadSelfAttention(nn.Module):
         batch, length, d_model = x.shape
         q, k, v = (self._split_heads(proj(x)) for proj in (self.q_proj, self.k_proj, self.v_proj))
         scores = q @ k.transpose(-2, -1) / math.sqrt(self.d_k)       # (batch, h, L, L)
+        # Functional softmax on purpose: SHAP's element-wise rescale rule for an nn.Softmax module
+        # makes the attributions explode, while the plain-gradient fallback stays stable.
         attn = self.attn_dropout(torch.softmax(scores, dim=-1))
         out = (attn @ v).transpose(1, 2).reshape(batch, length, d_model)
         return self.out_proj(out)
